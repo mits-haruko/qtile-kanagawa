@@ -1,29 +1,3 @@
-# Copyright (c) 2010 Aldo Cortesi
-# Copyright (c) 2010, 2014 dequis
-# Copyright (c) 2012 Randall Ma
-# Copyright (c) 2012-2014 Tycho Andersen
-# Copyright (c) 2012 Craig Barnes
-# Copyright (c) 2013 horsik
-# Copyright (c) 2013 Tao Sauvage
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in
-# all copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-# SOFTWARE.
-
 from libqtile import bar, widget
 from libqtile.layout.xmonad import MonadTall
 from libqtile.layout.tree import TreeTab
@@ -33,12 +7,15 @@ from libqtile.lazy import lazy
 from modules.hooks import *
 import os
 
+## Personal imports - located on the modules folder ##
+from modules.colors import kanagawa
+
 mod = "mod4"
 terminal = "kitty"
 
+## Keybindings ##
+
 keys = [
-    # A list of available commands that can be bound to keys can be found
-    # at https://docs.qtile.org/en/latest/manual/config/lazy.html
     # Switch between windows
     Key([mod], "h", lazy.layout.left(), desc="Move focus to left"),
     Key([mod], "l", lazy.layout.right(), desc="Move focus to right"),
@@ -67,6 +44,8 @@ keys = [
         lazy.layout.grow(),
         desc="expand monadtall window",
     ),
+    #Toggle floating
+    Key([mod, "shift"], "f", lazy.window.toggle_floating(), desc='Toggle floating'),
     # Toggle between split and unsplit sides of stack.
     # Split = all windows displayed
     # Unsplit = 1 window displayed, like Max layout, but still with
@@ -99,7 +78,29 @@ keys = [
     # Launch applications
     Key([mod], "r", lazy.spawn("kitty fish -c ranger"), desc="launch ranger"),
     Key([mod], "n", lazy.spawn("kitty fish -c nvim"), desc="launch nvim"),
+
+    # Volume control
+    Key(
+        [],
+        "XF86AudioLowerVolume",
+        lazy.spawn("amixer sset Master 5%-"),
+        desc="Lower volume",
+    ),
+    Key(
+        [],
+        "XF86AudioRaiseVolume",
+        lazy.spawn("amixer sset Master 5%+"),
+        desc="Raise volume",
+    ),
+    Key(
+        [],
+        "XF86AudioMute",
+        lazy.spawn("amixer -D default set Master toggle"),
+        desc="Mute volume",
+    ),
 ]
+
+## Groups ##
 
 groups = [Group(i) for i in "123456789"]
 
@@ -128,17 +129,33 @@ for i in groups:
         ]
     )
 
+layout_theme = {
+    "border_width":4,
+    "margin":4,
+    "border_focus":kanagawa['wvb2'],
+    "border_normal":kanagawa['wvb1']
+}
+
 layouts = [
     MonadTall(
-        border_focus="#54546D",
-        border_normal="#22324D",
-        border_width=1,
-        margin=5,
+        **layout_theme,
+        #border_focus=kanagawa['wvb2'],
+        #border_normal=kanagawa['wvb1'],
+        #border_width=3,
+        #margin=5,
         ),
-    TreeTab(),      
+    TreeTab(
+        active_bg=kanagawa['dfg1'],
+        active_fg=kanagawa['wvb1'],
+        bg_color=kanagawa['bg'],
+        border_width=3,
+        font="mononoki",
+        fontsize=12,
+    ),      
 ]
 
 floating_layout = Floating(
+    **layout_theme,
     float_rules=[
         *Floating.default_float_rules,
         Match(wm_class="lxappearance"), #gtk theming
@@ -150,34 +167,52 @@ widget_defaults = dict(
     font="mononoki",
     fontsize=12,
     padding=3,
+    foreground=kanagawa['fg'],
 )
 extension_defaults = widget_defaults.copy()
+
+## Bar ##
 
 screens = [
     Screen(
         top=bar.Bar(
             [
-                widget.CurrentLayout(),
-                widget.GroupBox(),
-                widget.Prompt(),
-                widget.WindowName(),
-                widget.Chord(
-                    chords_colors={
-                        "launch": ("#ff0000", "#ffffff"),
-                    },
-                    name_transform=lambda name: name.upper(),
+               widget.Spacer(
+                    length=5,
+                    background=kanagawa['bl'],
+               ),
+
+                widget.GroupBox(
+                    active=kanagawa['fg'],
+                    inactive=kanagawa['kg'],
+                    highlight_method= 'line',
+                    this_current_screen_border=kanagawa['wr'],
+                    disable_drag=True,
+                    hide_unused=True,
                 ),
-                widget.TextBox("default config", name="default"),
-                widget.TextBox("Press &lt;M-r&gt; to spawn", foreground="#d75f5f"),
+                widget.Spacer(),
+                widget.CurrentLayout(),
+                widget.Sep(),
+                widget.Volume(
+                    fmt="墳 {}",
+                ),
+                widget.Sep(),
+                widget.Clock(
+                    format="%Y/%d/%m %a %I:%M %p"
+                ),
+                widget.Sep(),
                 widget.Systray(),
-                widget.Clock(format="%Y-%m-%d %a %I:%M %p"),
-                widget.QuickExit(),
             ],
             24,
+            background=kanagawa['dbg'],
+            opacity=.95,
             # margin = [0,0,0,0],
             # border_width=[2, 0, 2, 0],  # Draw top and bottom borders
             # border_color=["ff00ff", "000000", "ff00ff", "000000"]  # Borders are magenta
         ),
+        # Set wallpaper
+        wallpaper = '~/.config/qtile/wallpapers/kyoto2.jpg',
+        wallpaper_mode = 'stretch',
     ),
 ]
 

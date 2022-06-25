@@ -6,11 +6,6 @@ setxkbmap -layout us -variant intl &
 #xrandr resolution
 xrandr -s 1920x1080 &
 
-
-#Set wallpaper
-#feh --big-fill ~/.config/qtile/wallpapers/kyoto1.jpg &
-~/.fehbg &
-
 #picom
 picom &
 
